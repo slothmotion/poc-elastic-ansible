@@ -1,0 +1,6 @@
+---
+kibana_home: /usr/share/kibana
+kibana_config_dir: /etc/kibana
+kibana_certs_dir: "{{ kibana_config_dir }}/certs"
+kibana_log_dir: /var/log/kibana
+kibana_log_file: "{{ kibana_log_dir }}/kibana.log"

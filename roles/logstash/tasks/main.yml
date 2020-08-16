@@ -1,0 +1,68 @@
+---
+- name: Install Logstash.
+  package:
+    name: logstash
+    state: present
+
+- name: Create Logstash pipeline configuration files.
+  template:
+    src: pipeline.conf.j2
+    dest: "{{ logstash_config_dir }}/pipeline.conf"
+    owner: root
+    group: logstash
+    mode: 0644
+  notify: restart logstash
+  
+- name: Create Logstash settings files.
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ logstash_settings_dir }}/{{ item }}"
+    owner: root
+    group: logstash
+    mode: 0644
+  with_items:
+    - pipelines.yml
+    - logstash.yml
+    - log4j2.properties
+  notify: restart logstash
+  
+- name: Copy Logstash certs.
+  copy:
+    remote_src: yes
+    src: "{{ elastic_certs_dir }}/{{ item }}"
+    dest: "{{ logstash_certs_dir }}/"
+    owner: root
+    group: logstash
+    mode: 0644
+  with_items:
+    - "ca/ca.crt"
+    - "{{ logstash_name }}/{{ logstash_name }}.crt"
+    - "{{ logstash_name }}/{{ logstash_name }}.key"
+  register: logstash_certs
+  notify: restart logstash
+  
+- name: Generate pkcs8 file for input modules.
+  command: >
+    openssl pkcs8 -topk8 -nocrypt 
+    -in {{ logstash_certs_dir }}/{{ logstash_name }}.key
+    -out {{ logstash_certs_dir }}/{{ logstash_name }}.pkcs8.key
+  notify: restart logstash
+  
+- name: Generate pkcs12 keystore for monitoring.
+  command: >
+    openssl pkcs12 -export
+    -in {{ logstash_certs_dir }}/{{ logstash_name }}.crt 
+    -inkey {{ logstash_certs_dir }}/{{ logstash_name }}.key 
+    -out {{ logstash_certs_dir }}/{{ logstash_name }}.p12 -name "logstash"
+    -CAfile {{ logstash_certs_dir }}/ca.crt
+    -passout pass:logstash
+  notify: restart logstash
+  
+- name: Force a restart if configuration has changed.
+  meta: flush_handlers
+  
+- name: Ensure Logstash is started and enabled on boot.
+  service:
+    name: logstash
+    state: started
+    enabled: true

@@ -1,0 +1,2 @@
+apm_server_config_dir: /etc/apm-server
+apm_server_certs_dir: "{{ apm_server_config_dir }}/certs"

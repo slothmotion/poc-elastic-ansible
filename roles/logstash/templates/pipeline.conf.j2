@@ -1,0 +1,29 @@
+input {
+  tcp {
+    port => {{ logstash_input_tcp_port }}
+    ssl_verify => true
+    ssl_enable => true
+    ssl_key => "{{ logstash_certs_dir }}/{{ logstash_name }}.pkcs8.key"
+    ssl_cert => "{{ logstash_certs_dir }}/{{ logstash_name }}.crt"
+    ssl_certificate_authorities => [ "{{ logstash_certs_dir }}/ca.crt" ]
+  }
+}
+
+filter {
+  json {
+    source => "{{ logstash_filter_json_source }}"
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["{{ logstash_output_elasticsearch_hosts }}"]
+    ssl => true
+    cacert => "{{ logstash_certs_dir }}/ca.crt"
+    ssl_certificate_verification => true
+    index => "{{ logstash_index_prefix }}-{{ logstash_index_suffix }}"
+    template_name => "{{ logstash_template_name }}"
+    template_overwrite => {{ logstash_template_overwrite }}
+    ilm_enabled => {{ logstash_ilm_enabled }}
+  }
+}

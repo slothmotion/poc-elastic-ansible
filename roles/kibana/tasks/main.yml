@@ -1,0 +1,56 @@
+---
+- name: Install Kibana.
+  package:
+    name: kibana
+    state: present
+
+- name: Ensure Kibana log folder exists.
+  file:
+    path: "{{ kibana_log_dir }}"
+    state: directory
+    owner: kibana
+    group: kibana
+    mode: 0755
+  when: kibana_log_dir is defined
+    
+- name: Ensure Kibana log file exists.
+  file:
+    path: "{{ kibana_log_file }}"
+    state: touch
+    owner: kibana
+    group: kibana
+    mode: 0755
+  when: kibana_log_file is defined
+  notify: restart kibana
+
+- name: Copy Kibana configuration.
+  template:
+    src: kibana.yml.j2
+    dest: "{{ kibana_config_dir }}/kibana.yml"
+    owner: root
+    group: kibana
+    mode: 0644
+  notify: restart kibana
+  
+- name: Copy Kibana certs.
+  copy:
+    remote_src: yes
+    src: "{{ elastic_certs_dir }}/{{ item }}"
+    dest: "{{ kibana_certs_dir }}/"
+    owner: root
+    group: kibana
+    mode: 0644
+  with_items:
+    - "ca/ca.crt"
+    - "{{ kibana_server_name }}/{{ kibana_server_name }}.crt"
+    - "{{ kibana_server_name }}/{{ kibana_server_name }}.key"
+  notify: restart kibana
+  
+- name: Force a restart if configuration has changed.
+  meta: flush_handlers
+
+- name: Ensure Kibana is started and enabled at boot.
+  service:
+    name: kibana
+    state: started
+    enabled: true

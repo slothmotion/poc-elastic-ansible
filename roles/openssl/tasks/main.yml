@@ -1,0 +1,71 @@
+---
+# Experimenting to automate cert generation.
+
+- name: Ensure certs directory exist.
+  file:
+    path: "{{ certs_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Create config files.
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ certs_dir }}/{{ item.dest }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - { src: x509.ext, dest: x509.ext }
+    - { src: x509_root.cfg.j2, dest: x509_root.cfg }
+    - { src: x509_node.cfg.j2, dest: x509_node.cfg }
+
+- name: Generate CA keys.
+  command: >
+    openssl req -new -nodes
+    -config x509_root.cfg
+    -keyout ca.key 
+    -out ca.csr
+  args:
+    chdir: "{{ certs_dir }}"
+    
+- name: Generate CA cert.
+  command: >
+    openssl x509 -req -sha256 -days 1095
+    -extfile x509.ext -extensions ca 
+    -in ca.csr
+    -signkey ca.key
+    -out ca.crt
+  args:
+    chdir: "{{ certs_dir }}"
+
+- name: Sign certificates.
+  command: >
+    openssl req -new -nodes
+    -config x509_node.cfg
+    -keyout {{ certs_base_name }}.key
+    -out {{ certs_base_name }}.csr
+  args:
+    chdir: "{{ certs_dir }}"
+    
+- name: Generate signed certificates.
+  command: >
+    openssl x509 -req -sha256 -days 730
+    -CA ca.crt -CAkey ca.key -CAcreateserial -CAserial ca.srl 
+    -extfile x509.ext -extensions server 
+    -in {{ certs_base_name }}.csr 
+    -out {{ certs_base_name }}.crt
+  args:
+    chdir: "{{ certs_dir }}"
+    
+- name: Ensure permissions for certs.
+  file:
+    path: "{{ certs_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - "{{ certs_base_name }}.key"
+    - "{{ certs_base_name }}.crt"
+    - "ca.crt"

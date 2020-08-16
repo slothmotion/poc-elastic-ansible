@@ -1,0 +1,5 @@
+logstash_home_dir: /usr/share/logstash
+logstash_settings_dir: /etc/logstash
+logstash_config_dir: "{{ logstash_settings_dir }}/conf.d"
+logstash_certs_dir: "{{ logstash_settings_dir }}/certs"
+logstash_log_dir: /var/log/logstash

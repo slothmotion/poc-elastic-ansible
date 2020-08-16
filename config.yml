@@ -1,0 +1,17 @@
+---
+network:
+  # for Hyper-V
+  gateway:
+    ip: '10.0.50.1'
+    prefixLength: 8
+    prefix: '10.0.50.0'
+box:
+  name: "centos/7"
+  version: "1905.1"
+  update: false
+nodes:
+- name: elastic-vm
+  ip: '10.0.50.2'
+  role: master
+  memory: 8192
+  cpus: 4

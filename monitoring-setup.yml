@@ -1,0 +1,14 @@
+---
+- hosts: monitoring
+  gather_facts: true
+  become: true
+
+  roles:
+  - java
+  - openssl
+  - elastic_repo
+  - elasticsearch
+  - kibana
+  - logstash
+  - apm_server
+  - httpd

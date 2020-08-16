@@ -1,0 +1,8 @@
+---
+elasticsearch_home: /usr/share/elasticsearch
+elasticsearch_heap_dump_path: /var/lib/elasticsearch
+elasticsearch_lib_dir: /var/lib/elasticsearch
+elasticsearch_log_dir: /var/log/elasticsearch
+elasticsearch_conf_dir: /etc/elasticsearch
+elasticsearch_certs_dir: "{{ elasticsearch_conf_dir }}/certs"
+elasticsearch_pid_dir: /var/run/elasticsearch

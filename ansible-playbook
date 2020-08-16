@@ -1,0 +1,3 @@
+#!/bin/bash
+#Wrapper script for executing ansible-playbook command
+exec vagrant ssh -- -t "cd /vagrant; ansible-playbook -i monitoring.ini monitoring-setup.yml"

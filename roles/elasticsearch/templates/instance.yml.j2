@@ -1,0 +1,14 @@
+---
+instances:
+  - name: "{{ elasticsearch_name }}"
+    dns: [ "{{ ansible_fqdn }}" ]
+    ip: [ "{{ elasticsearch_network_host }}" ]
+  - name: "{{ kibana_server_name }}"
+    dns: [ "{{ ansible_fqdn }}" ]
+    ip: [ "{{ kibana_server_host }}" ]
+  - name: "{{ logstash_name }}"
+    dns: [ "{{ ansible_fqdn }}" ]
+    ip: [ "{{ logstash_host }}" ]
+  - name: "{{ apm_server_name }}"
+    dns: [ "{{ ansible_fqdn }}" ]
+    ip: [ "{{ apm_server_host }}" ]

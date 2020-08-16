@@ -1,0 +1,110 @@
+---
+- name: Install Elasticsearch.
+  package:
+    name: elasticsearch
+    state: present
+    
+- name: Copy Elasticsearch default file.
+  become: yes
+  template:
+    src: "elasticsearch.j2"
+    dest: "/etc/sysconfig/elasticsearch"
+    owner: root
+    group: elasticsearch
+    mode: 0660
+    force: yes
+  notify: restart elasticsearch
+    
+- name: Configure Elasticsearch.
+  template:
+    src: "{{ item }}.j2"
+    dest: /etc/elasticsearch/{{ item }}
+    owner: root
+    group: elasticsearch
+    mode: 0660
+  with_items:
+    - elasticsearch.yml
+    - jvm.options
+    - log4j2.properties
+  notify: restart elasticsearch
+  
+- name: Ensure certs directory exits for Elastic components.
+  file:
+    path: "{{ elastic_certs_dir }}"
+    state: directory
+    owner: root
+    group: elasticsearch
+    mode: 0660
+    
+- name: Upload input for cert generation.
+  template:
+    src: instance.yml.j2
+    dest: "{{ elastic_certs_dir }}/instance.yml"
+    owner: root
+    group: elasticsearch
+    mode: 0660
+  register: instances
+  
+- name: Ensure the certs.zip does not exist when instance changed.
+  file:
+    path: "{{ elastic_certs_dir }}/certs.zip"
+    state: absent
+  when: instances.changed
+   
+- name: Generate certificates for Elastic components when does not exist.
+  command: >
+    {{ elasticsearch_home }}/bin/elasticsearch-certutil cert ca --pem 
+    --in {{ elastic_certs_dir }}/instance.yml 
+    --out {{ elastic_certs_dir }}/certs.zip
+  args:
+    creates: "{{ elastic_certs_dir }}/certs.zip"
+  when: instances.changed
+    
+- name: Ensure permissions for generated Elastic certs.
+  file:
+    path: "{{ elastic_certs_dir }}/certs.zip"
+    owner: root
+    group: elasticsearch
+    mode: 0660
+    
+- name: Unzip Elastic certs.
+  become: yes
+  unarchive:
+    remote_src: yes
+    src: "{{ elastic_certs_dir }}/certs.zip"
+    dest: "{{ elastic_certs_dir }}"
+    owner: root
+    group: root
+    mode: 0644
+    
+- name: Copy Elasticsearch certs.
+  become: yes
+  copy:
+    remote_src: yes
+    src: "{{ elastic_certs_dir }}/{{ item }}"
+    dest: "{{ elasticsearch_certs_dir }}/"
+    owner: root
+    group: elasticsearch
+    mode: 0644
+  with_items:
+    - "ca/ca.crt"
+    - "{{ elasticsearch_name }}/{{ elasticsearch_name }}.crt"
+    - "{{ elasticsearch_name }}/{{ elasticsearch_name }}.key"
+  notify: restart elasticsearch
+
+- name: Force a restart if configuration has changed.
+  meta: flush_handlers
+
+- name: Start Elasticsearch.
+  service:
+    name: elasticsearch
+    state: started
+    enabled: true
+
+- name: Make sure Elasticsearch is running before proceeding.
+  wait_for:
+    host: "{{ elasticsearch_network_host }}"
+    port: "{{ elasticsearch_http_port }}"
+    delay: 3
+    timeout: 300
+ 

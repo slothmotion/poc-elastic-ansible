@@ -1,0 +1,71 @@
+# http app, redirected to https
+Listen 80
+
+# https app
+Listen 443
+
+ServerName {{ ansible_default_ipv4.address }}
+
+# Web app on http
+<VirtualHost *:80>
+  ServerName {{ ansible_default_ipv4.address }}
+  
+  LogLevel warn
+  
+  ErrorLog    {{ apache_log_path }}/httpd_log
+  TransferLog {{ apache_log_path }}/access_log
+  CustomLog   {{ apache_log_path }}/request_log "%t %h \"%r\" %b"
+  
+  Redirect permanent / https://{{ ansible_default_ipv4.address }}/ 
+</VirtualHost>
+
+
+# Web app on https
+<VirtualHost _default_:443>
+  ServerName {{ ansible_default_ipv4.address }}
+  
+  SSLEngine On
+  SSLProtocol all -SSLv2 -SSLv3
+  SSLCipherSuite HIGH:3DES:!aNULL:!MD5:!SEED:!IDEA
+  SSLCertificateFile    {{ certs_dir }}/{{ certs_base_name }}.crt
+  SSLCertificateKeyFile {{ certs_dir }}/{{ certs_base_name }}.key
+  
+  LogLevel warn
+  
+  ErrorLog    {{ apache_log_path }}/ssl_httpd_log
+  TransferLog {{ apache_log_path }}/ssl_access_log
+  CustomLog   {{ apache_log_path }}/ssl_request_log "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b"
+  
+  # Necessary because of the behaviour of Kibana server.basePath configuration.
+  Redirect {{ kibana_server_basePath }} {{ kibana_server_basePath }}/
+  
+  SSLProxyEngine On
+  
+  # When a proxy is configured to forward requests to a remote SSL server, this directive can be used to configure certificate
+  # verification of the remote server.
+  # none|optional|require|optional_no_ca
+  SSLProxyVerify optional_no_ca
+  
+  # This directive sets whether the remote server certificate's CN field is compared against the hostname of the request URL.
+  # If both are not equal a 502 status code (Bad Gateway) is sent.
+  # on|off  
+  SSLProxyCheckPeerCN off
+  
+  # This directive configures host name checking for server certificates when mod_ssl is acting as an SSL client.
+  # The check will succeed if the host name from the request URI matches one of the CN attribute(s) of the certificate's subject,
+  # or matches the subjectAltName extension. If the check fails, the SSL request is aborted and a 502 status code (Bad Gateway) is returned.
+  # on|off   
+  SSLProxyCheckPeerName off
+  
+  # Kibana
+  ProxyPass         {{ kibana_server_basePath }}/ https://{{ kibana_server_host }}:{{ kibana_server_port }}{{ kibana_server_basePath }}/ retry=1 acquire=3000 timeout=600 Keepalive=On
+  ProxyPassReverse  {{ kibana_server_basePath }}/ https://{{ kibana_server_host }}:{{ kibana_server_port }}{{ kibana_server_basePath }}/
+  
+  # Logstash
+
+  # No pooled connection will be reused if the client request is the initial request on the frontend connection.
+  # This avoids the "proxy: error reading status line from remote server" error message caused by the race condition 
+  # that the backend server closed the pooled connection after the connection check by the proxy and
+  # before data sent by the proxy reached the backend.
+  SetEnv proxy-initial-not-pooled
+</VirtualHost>

@@ -1,0 +1,21 @@
+[ req ]
+prompt = no
+default_bits = 4096
+distinguished_name = node
+req_extensions = req_ext
+
+[ node ]
+C=HU
+ST=Pest
+L=Budapest
+O=Slothmotion
+CN={{ ansible_default_ipv4.address }}
+
+[ req_ext ]
+subjectAltName = @alt_names
+extendedKeyUsage = serverAuth,clientAuth
+
+[ alt_names ]
+{% for host in certs_alt_names %}
+  IP.{{ loop.index }} = {{ host }}
+{% endfor %}

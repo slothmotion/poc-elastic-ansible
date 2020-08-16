@@ -1,0 +1,46 @@
+java_home: "/usr/lib/jvm/jre-1.8.0-openjdk"
+
+certs_dir: /etc/pki/tls/certs
+certs_base_name: "{{ ansible_fqdn }}"
+certs_alt_names: ["10.0.99.1"]
+
+elastic_version: "7.8.0"
+elastic_package_version: "7.x"
+elastic_certs_dir: "/usr/share/certs"
+
+elasticsearch_name: elasticsearch
+elasticsearch_network_host: "{{ ansible_default_ipv4.address }}"
+elasticsearch_http_port: 9200
+elasticsearch_heap_size: 2g
+# this is the main switch for all monitoring features
+elasticsearch_monitoring_enabled: 'true'
+
+kibana_server_name: kibana
+kibana_server_host: "{{ ansible_default_ipv4.address }}"
+kibana_server_port: 5601
+kibana_server_basePath: "/monitoring"
+kibana_elasticsearch_url: "https://{{ elasticsearch_network_host }}:{{ elasticsearch_http_port }}"
+
+logstash_name: logstash
+logstash_host: "{{ ansible_default_ipv4.address }}"
+logstash_input_tcp_port: 5000
+logstash_filter_json_source: "message"
+logstash_output_elasticsearch_hosts: "https://{{ elasticsearch_network_host }}:{{ elasticsearch_http_port }}"
+logstash_index_prefix: logs
+logstash_index_suffix: "%{+YYYY.MM.dd}"
+logstash_template_name: logstash
+logstash_template_overwrite: 'false'
+logstash_ilm_enabled: 'false'
+logstash_pipeline_workers: 1
+logstash_pipeline_batch_size: 1
+logstash_monitoring_sniffing_enabled: 'true'
+logstash_monitoring_interval: '10s'
+logstash_monitoring_details_enabled: 'true'
+
+apm_server_version: "{{ elastic_version }}"
+apm_server_name: apm-server
+apm_server_host: "{{ ansible_default_ipv4.address }}"
+apm_server_port: 8200
+apm_server_output_elasticsearch: "{{ elasticsearch_network_host }}:{{ elasticsearch_http_port }}"
+apm_server_kibana_url: "https://{{ kibana_server_host }}:{{ kibana_server_port }}{{ kibana_server_basePath }}"
+apm_server_monitoring_enabled: 'true'
