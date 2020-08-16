@@ -1,4 +1,4 @@
-#POC for building up a monitoring system
+# POC for building up a monitoring system
 
 This is a POC for installing and configuring Elastic Stack with Ansible. The repository also contains a Vagrant 
 configuration which provides a basic Hyper-V VM for testing.
@@ -10,25 +10,25 @@ For achieving my goals (mainly learn Asnible) I used the awesome repositories of
 
 Every constructive comment and commit is welcommed!
 
-##Prerequisites
+## Prerequisites
 
 This project uses:
 * Vagrant (version >= 2.2.7);
 * Hyper-V for virtualization.
 
-####Important notes
+#### Important notes
 
 * Vagrant commands must be executed with elevated user privileges.
 * The setup is not compatible with VPN due to conflicts in networking.
 
-##Setting up the test environment
+## Setting up the test environment
 
 In the `Vagrantfile` hyperv provider is configured. To boot the VMs, execute the following command in the root folder:
 ```
 vagrant up
 ```
 
-####Plugin installation
+#### Plugin installation
 
 There are additional plugins might be configured in the `Vagrantfile`, and in case they are not installed yet, 
 the first execution of vagrant commands will ask for input to installing it.
@@ -43,7 +43,7 @@ Install local plugins (Y/N) [N]: Y
 In the example above Vagrant asks if `vagrant-reload` plugin should be installed. Select Yes, it might be necessary to 
 execute again the original vagrant command.
 
-####Special configurations
+#### Special configurations
 
 In case of Hyper-V provider special a configuration step is necessary as currently Vagrant does not support static IP 
 by default (see: https://www.vagrantup.com/docs/hyperv/limitations.html).
@@ -69,20 +69,20 @@ later step the VM will be automaticly reconfigured to use the `VagrantNAT` switc
 
 This configuration only required at the first execution of `vagrant up` command.
 
-####Default configurations
+#### Default configurations
 
 IP: 10.0.99.2
 hostname: elastic-vm
 vCPU: 4
 memory: 4096GB/8192GB (min/max)
 
-####Check status
+#### Check status
 
 ```
 vagrant status
 ```
 
-####Access the VM
+#### Access the VM
 
 Convenient command for accessing the VM:
 
@@ -90,13 +90,13 @@ Convenient command for accessing the VM:
 vagrant ssh
 ``` 
 
-####Stopt the VM
+#### Stopt the VM
 
 ```
 vagrant halt
 ```
 
-####Troubleshooting
+#### Troubleshooting
 
 Configure the Vagrant loglevel with the following variable:
 
@@ -107,7 +107,7 @@ VAGRANT_LOG=debug
 If vagrant stuck at boot time after previous successful boots, it might help if the setup is destroyed and
 the .vagrant folder deleted.
 
-####Destroy the test setup
+#### Destroy the test setup
 
 To clean up (remove VM, VirtualSwitch and network configuraiton), execute the following:
 
@@ -117,11 +117,11 @@ vagrant destroy -f
 
 The command above forcibly removes the VMs, without the -f flag, Vagrant asks for confirmation.
 
-####Further docs
+#### Further docs
 
 Please, visit the official site: https://www.vagrantup.com/docs
 
-##Ansible playbooks
+## Ansible playbooks
 
 Ansible and few additional useful package are installed at the first `vagrant up`.
 
@@ -132,7 +132,7 @@ synchronization manually (e.g. for syncing the changes in the ansible resources)
 vagrant rsync
 ```
 
-####Elastic stack installation
+#### Elastic stack installation
 
 The project provides a single playbook `monitoring-setup.yml` that is responsible for installing and configuring the
 Elastic components. To execute this playbook either you need to ssh into the VM or you can utilize the provided
@@ -146,7 +146,7 @@ The playbook will install the following applications and required packages:
 * APM-server
 * httpd
 
-####Verification
+#### Verification
 
 By default, Kibana should be available on the following url:
 
@@ -168,6 +168,7 @@ curl http://127.0.0.1:9600/?pretty
 systemctl status apm-server
 ```
 
-####ILM policy
+#### ILM policy
 
+TBD
 
