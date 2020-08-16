@@ -71,7 +71,7 @@ This configuration only required at the first execution of `vagrant up` command.
 
 #### Default configurations
 
-*IP: 10.0.99.2
+* IP: 10.0.99.2
 * hostname: elastic-vm
 * vCPU: 4
 * memory: 4096GB/8192GB (min/max)
